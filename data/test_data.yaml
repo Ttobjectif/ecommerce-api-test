@@ -1,0 +1,8 @@
+- name: test_user
+  action: buy
+- name: zhangzhen
+  action: login
+- name: admin
+  action: delete
+- name: xiaoming
+  action: study
