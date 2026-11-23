@@ -5,7 +5,8 @@ from datetime import datetime
 
 def get_logger(name="AutoTest"):
     # 1. 确保 logs 文件夹存在（如果不存在就自动创建一个）
-    log_dir = "./logs"
+    BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    log_dir = os.path.join(BASE_DIR, "logs")
     if not os.path.exists(log_dir):
         os.makedirs(log_dir)
 
