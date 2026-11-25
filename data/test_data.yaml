@@ -1,8 +1,4 @@
-- name: test_user
-  action: buy
-- name: zhangzhen
-  action: login
-- name: admin
-  action: delete
-- name: xiaoming
-  action: study
+- product_id: "1001"
+  expected_name: "iPhone"
+- product_id: "9999"
+  expected_name: "not_found"

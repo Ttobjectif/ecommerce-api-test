@@ -3,7 +3,10 @@ import sqlite3
 
 app = Flask(__name__)
 
-# 初始化一个极简的 SQLite 数据库和商品表
+# 假装是真实的Token
+FAKE_TOKEN = "admin_token_123"
+
+# 初始化一个简单的SQLite数据库和商品表
 def init_db():
     conn = sqlite3.connect('ecommerce.db')
     cursor = conn.cursor()
@@ -13,29 +16,50 @@ def init_db():
     conn.commit()
     conn.close()
 
-init_db()
 
-@app.route('/api/products/1001', methods=['GET'])
-def get_product():
+# 登录接口
+@app.route('/api/login', methods=['POST'])
+def login():
+    # 无论谁登录，只要发了 POST，就给他发这个 Token
+    return jsonify({"code": 200, "token": FAKE_TOKEN})
+
+# 查询商品接口
+@app.route('/api/products/<product_id>', methods=['GET'])
+def get_product(product_id):
     conn = sqlite3.connect('ecommerce.db')
     cursor = conn.cursor()
-    cursor.execute('SELECT * FROM products WHERE id = "1001"')
+    cursor.execute('SELECT * FROM products WHERE id = ?', (product_id,))
     result = cursor.fetchone()
     conn.close()
     if result:
         return jsonify({"id": result[0], "name": result[1], "stock": result[2]})
     return jsonify({"msg": "not found"}), 404
 
-# 下单接口：扣减库存
+# 下单接口
 @app.route('/api/orders/create', methods=['POST'])
 def create_order():
-    conn = sqlite3.connect('ecommerce.db')
+    auth_header = request.headers.get('Authorization')
+    if auth_header != f"Bearer {FAKE_TOKEN}":
+        return jsonify({"code": 401, "msg": "未授权，请先登录"}), 401
+    conn = sqlite3.connect('ecommerce.db', timeout=5)
     cursor = conn.cursor()
     # 扣减库存
-    cursor.execute('UPDATE products SET stock = stock - 1 WHERE id = "1001"')
-    conn.commit()
-    conn.close()
-    return jsonify({"code": 200, "msg": "success"})
+    try:
+        # 扣减库存
+        cursor.execute('UPDATE products SET stock = stock - 1 WHERE id = "1001" AND stock > 0')
+
+        # 如果库存不足
+        if cursor.rowcount == 0:
+            return jsonify({"code": 400, "msg": "库存不足，下单失败"})
+
+        conn.commit()
+        return jsonify({"code": 200, "msg": "success"})
+
+    finally:
+        # 一定执行的
+        cursor.close()
+        conn.close()
 
 if __name__ == '__main__':
+    init_db()
     app.run(port=5000)
