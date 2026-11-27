@@ -23,4 +23,12 @@ jobs:
 
     - name: Run tests with Pytest
       run: |
-        python -m pytest testcases/test_order_flow.py -v
+        # 🟢 1. 在 Linux 云端后台启动 Flask 服务（& 代表后台运行）
+        # 把它的日志输出到 flask.log 方便排查
+        python mock_server/app.py > flask.log 2>&1 &
+
+        # 🟢 2. 睡眠 3 秒，给 Flask 一点时间醒过来（建表、绑定端口）
+        sleep 3
+
+        # 🟢 3. 执行所有的测试用例（直接跑整个 testcases 文件夹）
+        python -m pytest testcases/ -v -s

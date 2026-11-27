@@ -1,27 +1,34 @@
 import sqlite3
 from common.logger import log
 
+# 默认连接 mock_server 数据库
+DB_PATH = "./mock_server/ecommerce.db"
 
 def query_db(sql):
-    log.info(f"--- 开始查询本地模拟数据库，SQL: {sql} ---")
-
-    # 1. 连接内存数据库
-    conn = sqlite3.connect(':memory:')
+    """通用查询方法"""
+    conn = sqlite3.connect(DB_PATH, timeout=5)
     cursor = conn.cursor()
-
     try:
-        # 2. 模拟造一条数据
-        cursor.execute("CREATE TABLE orders (item_id TEXT, status TEXT)")
-        cursor.execute("INSERT INTO orders VALUES ('10086', 'PAID')")
-
-        # 3. 执行传进来的 SQL
         cursor.execute(sql)
-        result = cursor.fetchall()
-
-        log.info(f"数据库查询结果: {result}")
-        return result
-
+        return cursor.fetchall()
+    except Exception as e:
+        log.error(f"查询失败: {sql}, 报错: {e}")
+        raise e
     finally:
         cursor.close()
         conn.close()
-        log.info("--- 数据库连接已关闭 ---")
+
+def execute_db(sql):
+    """通用修改方法（增删改）"""
+    conn = sqlite3.connect(DB_PATH, timeout=5)
+    cursor = conn.cursor()
+    try:
+        cursor.execute(sql)
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        log.error(f"执行失败: {sql}, 报错: {e}")
+        raise e
+    finally:
+        cursor.close()
+        conn.close()
